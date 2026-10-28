@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Үшбұрыштың қабырғалары мен бұрыштары арасындағы қатынастар</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['Fira Code', 'monospace']
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0f9ff',
+                            100: '#e0f2fe',
+                            500: '#0284c7',
+                            600: '#0284c7',
+                            700: '#0369a1',
+                            900: '#0c4a6e',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        canvas { touch-action: none; }
+        .tab-btn.active {
+            border-bottom-color: #0284c7;
+            color: #0284c7;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-sky-600 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid font-bold fa-shapes text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 leading-tight">Үшбұрыштар Геометриясы</h1>
+                    <p class="text-xs text-slate-500 hidden sm:block">Қабырғалар мен бұрыштар арасындағы қатынастар интерактивті тренажеры</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <span class="text-xs bg-sky-100 text-sky-800 font-medium px-2.5 py-1 rounded-full border border-sky-200">
+                    <i class="fa-solid fa-graduation-cap mr-1"></i> 8-9 сынып Геометрия
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Body Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 w-full flex-grow grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+        <!-- Left Column: Interactive Canvas & Live Metrics (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col gap-4">
+            <!-- Canvas Container Card -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+                <div class="bg-slate-100/80 px-4 py-3 border-b border-slate-200 flex flex-wrap justify-between items-center gap-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-vector-square text-sky-600"></i>
+                        <h2 class="font-semibold text-slate-800 text-sm sm:text-base">Интерактивті моделятор</h2>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="toggleCircumcircle" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1 shadow-sm">
+                            <i class="fa-regular fa-circle text-sky-600"></i> Сырттай сызылған шеңбер
+                        </button>
+                        <button id="resetCanvas" class="text-xs bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1 shadow-sm">
+                            <i class="fa-solid fa-rotate-right text-amber-600"></i> Сброс
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Canvas Wrapper -->
+                <div class="relative w-full bg-gradient-to-b from-slate-900 to-slate-950 min-h-[380px] sm:min-h-[440px] flex items-center justify-center p-2">
+                    <canvas id="triangleCanvas" class="w-full h-full cursor-crosshair rounded-xl"></canvas>
+                    
+                    <!-- Helper Overlay Tip -->
+                    <div class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-slate-300 text-xs px-3 py-1.5 rounded-lg border border-slate-700/60 flex items-center gap-2 pointer-events-none">
+                        <i class="fa-solid fa-hand-pointer text-sky-400 animate-bounce"></i>
+                        <span>Төбелерді (A, B, C) тышқанмен тартып жылжытыңыз</span>
+                    </div>
+                </div>
+
+                <!-- Dynamic Realtime Triangle Data Card -->
+                <div class="p-4 bg-slate-50 border-t border-slate-200 grid grid-cols-2 sm:grid-cols-3 gap-3">
+                    <!-- Angles -->
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Бұрыштар</span>
+                        <div class="space-y-1 text-sm font-mono">
+                            <div class="flex justify-between items-center"><span class="text-rose-600 font-semibold">∠A (α):</span> <span id="angleA" class="font-bold text-slate-800">0°</span></div>
+                            <div class="flex justify-between items-center"><span class="text-emerald-600 font-semibold">∠B (β):</span> <span id="angleB" class="font-bold text-slate-800">0°</span></div>
+                            <div class="flex justify-between items-center"><span class="text-indigo-600 font-semibold">∠C (γ):</span> <span id="angleC" class="font-bold text-slate-800">0°</span></div>
+                        </div>
+                    </div>
+                    <!-- Sides -->
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Қабырғалар</span>
+                        <div class="space-y-1 text-sm font-mono">
+                            <div class="flex justify-between items-center"><span class="text-rose-600 font-semibold">a (BC):</span> <span id="sideA" class="font-bold text-slate-800">0</span></div>
+                            <div class="flex justify-between items-center"><span class="text-emerald-600 font-semibold">b (AC):</span> <span id="sideB" class="font-bold text-slate-800">0</span></div>
+                            <div class="flex justify-between items-center"><span class="text-indigo-600 font-semibold">c (AB):</span> <span id="sideC" class="font-bold text-slate-800">0</span></div>
+                        </div>
+                    </div>
+                    <!-- General Stats -->
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-xs col-span-2 sm:col-span-1">
+                        <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Сипаттамасы</span>
+                        <div class="space-y-1 text-sm font-mono">
+                            <div class="flex justify-between items-center"><span class="text-slate-600">Периметр (P):</span> <span id="valP" class="font-bold text-slate-800">0</span></div>
+                            <div class="flex justify-between items-center"><span class="text-slate-600">Аудан (S):</span> <span id="valS" class="font-bold text-slate-800">0</span></div>
+                            <div class="flex justify-between items-center"><span class="text-sky-600 font-semibold">Радиус (R):</span> <span id="valR" class="font-bold text-sky-700">0</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Tabs (Theorems, Calculator, Quiz) (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col gap-4">
+            
+            <!-- Navigation Tabs -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-1.5 shadow-sm flex text-xs sm:text-sm font-medium text-slate-600 gap-1">
+                <button onclick="switchTab('theorems')" id="tab-theorems" class="tab-btn active flex-1 py-2 rounded-xl transition text-center border-b-2 border-transparent">
+                    <i class="fa-solid fa-book-bookmark mr-1"></i> Теоремалар
+                </button>
+                <button onclick="switchTab('calculator')" id="tab-calculator" class="tab-btn flex-1 py-2 rounded-xl transition text-center border-b-2 border-transparent">
+                    <i class="fa-solid fa-calculator mr-1"></i> Есептегіш
+                </button>
+                <button onclick="switchTab('quiz')" id="tab-quiz" class="tab-btn flex-1 py-2 rounded-xl transition text-center border-b-2 border-transparent">
+                    <i class="fa-solid fa-square-check mr-1"></i> Тест / Викторина
+                </button>
+            </div>
+
+            <!-- Tab Content Panel -->
+            <div class="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm flex-grow flex flex-col">
+
+                <!-- 1. THEOREMS TAB -->
+                <div id="content-theorems" class="space-y-5 text-slate-700">
+                    <div class="border-b border-slate-100 pb-3">
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-atom text-sky-600"></i> Негізгі теоремалар мен қатынастар
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-1">Төмендегі көрсеткіштер сол жақтағы моделятормен тікелей байланысты!</p>
+                    </div>
+
+                    <!-- Theorem 1: Angle Sum -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <h4 class="font-semibold text-sm text-slate-900 flex justify-between items-center">
+                            <span>1. Ішкі бұрыштардың қосындысы</span>
+                            <span class="text-xs font-mono bg-sky-100 text-sky-800 px-2 py-0.5 rounded-md">∠A + ∠B + ∠C = 180°</span>
+                        </h4>
+                        <p class="text-xs text-slate-600 mt-2">Кез келген үшбұрыштың ішкі бұрыштарының қосындысы әрдайым 180°-қа тең.</p>
+                        <div class="mt-3 bg-white p-2.5 rounded-lg border border-slate-200 text-xs font-mono flex items-center justify-between">
+                            <span id="sumCalcText">0° + 0° + 0°</span>
+                            <span id="sumBadge" class="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">180° ✓</span>
+                        </div>
+                    </div>
+
+                    <!-- Theorem 2: Side Inequality -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <h4 class="font-semibold text-sm text-slate-900 flex justify-between items-center">
+                            <span>2. Үшбұрыш теңсіздігі</span>
+                            <span class="text-xs font-mono bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md">a + b > c</span>
+                        </h4>
+                        <p class="text-xs text-slate-600 mt-2">Үшбұрыштың кез келген қабырғасы қалған екі қабырғасының қосындысынан кіші болады.</p>
+                        <div id="inequalityList" class="mt-3 space-y-1.5 text-xs font-mono">
+                            <!-- JS fills dynamic status -->
+                        </div>
+                    </div>
+
+                    <!-- Theorem 3: Opposite Side/Angle -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <h4 class="font-semibold text-sm text-slate-900">3. Үлкен қабырғаға үлкен бұрыш қарсы жатады</h4>
+                        <p class="text-xs text-slate-600 mt-1">Үшбұрышта үлкен қабырғаға үлкен бұрыш, ал кіші қабырғаға кіші бұрыш қарсы жатады.</p>
+                        <div id="sideAngleMatch" class="mt-3 p-2.5 bg-white rounded-lg border border-slate-200 text-xs space-y-1">
+                            <!-- Dynamic text -->
+                        </div>
+                    </div>
+
+                    <!-- Theorem 4: Law of Sines -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <h4 class="font-semibold text-sm text-slate-900 flex justify-between items-center">
+                            <span>4. Синустар теоремасы</span>
+                        </h4>
+                        <div class="my-2 p-2 bg-white rounded border border-slate-200 text-center text-xs font-mono font-bold text-sky-800">
+                            a / sin(A) = b / sin(B) = c / sin(C) = 2R
+                        </div>
+                        <div class="text-xs font-mono grid grid-cols-3 gap-2 text-center mt-2" id="sinesValDisplay">
+                            <!-- JS calculations -->
+                        </div>
+                    </div>
+
+                    <!-- Theorem 5: Law of Cosines -->
+                    <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                        <h4 class="font-semibold text-sm text-slate-900">5. Косинустар теоремасы</h4>
+                        <div class="my-2 p-2 bg-white rounded border border-slate-200 text-center text-xs font-mono font-bold text-indigo-800">
+                            a² = b² + c² - 2bc · cos(A)
+                        </div>
+                        <div class="text-xs font-mono space-y-1 bg-white p-2.5 rounded border border-slate-200" id="cosinesValDisplay">
+                            <!-- JS dynamic math test -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. CALCULATOR TAB -->
+                <div id="content-calculator" class="hidden space-y-5">
+                    <div class="border-b border-slate-100 pb-3">
+                        <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                            <i class="fa-solid fa-calculator text-sky-600"></i> Үшбұрышты есептегіш
+                        </h3>
+                        <p class="text-xs text-slate-500 mt-1">Белгілі мәндер бойынша қалған қабырғалар мен бұрыштарды табу</p>
+                    </div>
+
+                    <!-- Calculator Mode Selector -->
+                    <div class="space-y-3">
+                        <label class="block text-xs font-medium text-slate-700">Есептеу түрін таңдаңыз:</label>
+                        <select id="calcMode" onchange="updateCalcInputs()" class="w-full bg-slate-50 border border-slate-300 text-slate-800 text-xs sm:text-sm rounded-xl p-2.5 focus:ring-2 focus:ring-sky-500 outline-none">
+                            <option value="SSS">3 қабырғасы бойынша (a, b, c) -> [Косинустар теоремасы]</option>
+                            <option value="SAS">2 қабырғасы және арасындағы бұрышы (b, c, ∠A)</option>
+                            <option value="ASA">1 қабырғасы және екі бұрышы (a, ∠B, ∠C)</option>
+                        </select>
+                    </div>
+
+                    <!-- Dynamic Input Fields -->
+                    <div id="calcInputs" class="grid grid-cols-3 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <!-- Filled dynamically by JS -->
+                    </div>
+
+                    <button onclick="calculateTriangle()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-medium py-2.5 rounded-xl shadow-md transition text-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Есептеу
+                    </button>
+
+                    <!-- Calculator Results Box -->
+                    <div id="calcResult" class="hidden p-4 bg-sky-50 border border-sky-200 rounded-xl space-y-2 text-xs sm:text-sm">
+                        <h4 class="font-bold text-sky-900 border-b border-sky-200 pb-1">Нәтижелері:</h4>
+                        <div id="calcResultList" class="font-mono text-slate-800 space-y-1"></div>
+                    </div>
+                </div>
+
+                <!-- 3. QUIZ TAB -->
+                <div id="content-quiz" class="hidden space-y-5">
+                    <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+                        <div>
+                            <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+                                <i class="fa-solid fa-graduation-cap text-sky-600"></i> Билимді тексеру
+                            </h3>
+                            <p class="text-xs text-slate-500 mt-1">Теория бойынша интерактивті тест тапсырмалары</p>
+                        </div>
+                        <span id="quizScore" class="bg-sky-100 text-sky-800 text-xs font-mono font-bold px-3 py-1 rounded-full">
+                            0 / 5
+                        </span>
+                    </div>
+
+                    <div id="quizContainer" class="space-y-4">
+                        <!-- Question Question Header -->
+                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                            <span id="qNum" class="text-xs font-bold text-sky-600 uppercase tracking-wide">Сұрақ 1</span>
+                            <h4 id="qText" class="text-sm font-semibold text-slate-800 mt-1">...</h4>
+                        </div>
+
+                        <!-- Options -->
+                        <div id="qOptions" class="space-y-2">
+                            <!-- Dynamic Radio Buttons / Cards -->
+                        </div>
+
+                        <!-- Explanation Box -->
+                        <div id="quizFeedback" class="hidden p-3.5 rounded-xl text-xs font-medium space-y-1"></div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex justify-end gap-2 pt-2">
+                            <button id="nextBtn" onclick="nextQuestion()" class="hidden bg-slate-900 hover:bg-slate-800 text-white text-xs font-medium px-4 py-2 rounded-xl transition">
+                                Келесі сұрақ <i class="fa-solid fa-arrow-right ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            Қазақша интерактивті геометриялық білім беру ресурсы &copy; 2026. Барлық құқықтар қорғалған.
+        </div>
+    </footer>
+
+    <!-- Logic Script -->
+    <script>
+        // --- 1. STATE & CANVAS INITIALIZATION ---
+        const canvas = document.getElementById('triangleCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let showCircumcircle = false;
+
+        // Triangle vertices (Initial coordinates)
+        let points = [
+            { x: 120, y: 320, label: 'A', color: '#f43f5e' }, // Red
+            { x: 380, y: 100, label: 'B', color: '#10b981' }, // Green
+            { x: 420, y: 320, label: 'C', color: '#6366f1' }  // Indigo
+        ];
+
+        let activePoint = null;
+        const vertexRadius = 12;
+
+        // Resize Canvas dynamically
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = container.clientWidth * dpr;
+            canvas.height = container.clientHeight * dpr;
+            ctx.scale(dpr, dpr);
+            draw();
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+
+        // --- MATH HELPERS ---
+        function dist(p1, p2) {
+            return Math.hypot(p1.x - p2.x, p1.y - p2.y);
+        }
+
+        // Calculate internal angles using Law of Cosines
+        function getTriangleData() {
+            const A = points[0];
+            const B = points[1];
+            const C = points[2];
+
+            // Side lengths (in pixels, scaled for realism)
+            const scale = 0.05; // Pixel to cm scale factor
+            const c = dist(A, B) * scale; // side c opposite to C
+            const a = dist(B, C) * scale; // side a opposite to A
+            const b = dist(A, C) * scale; // side b opposite to B
+
+            // Angles in Radians
+            const angleA_rad = Math.acos(Math.max(-1, Math.min(1, (b*b + c*c - a*a) / (2 * b * c))));
+            const angleB_rad = Math.acos(Math.max(-1, Math.min(1, (a*a + c*c - b*b) / (2 * a * c))));
+            const angleC_rad = Math.PI - angleA_rad - angleB_rad;
+
+            // Convert to Degrees
+            const degA = angleA_rad * (180 / Math.PI);
+            const degB = angleB_rad * (180 / Math.PI);
+            const degC = angleC_rad * (180 / Math.PI);
+
+            // Perimeter & Area (Heron's Formula)
+            const sP = (a + b + c) / 2;
+            const area = Math.sqrt(Math.max(0, sP * (sP - a) * (sP - b) * (sP - c)));
+
+            // Circumradius R = a / (2 * sin A)
+            const R = a / (2 * Math.sin(angleA_rad));
+
+            return { a, b, c, degA, degB, degC, radA: angleA_rad, radB: angleB_rad, radC: angleC_rad, area, perimeter: a+b+c, R };
+        }
+
+        // Calculate Circumcenter in screen coordinates
+        function getCircumcenter() {
+            const [A, B, C] = points;
+            const D = 2 * (A.x * (B.y - C.y) + B.x * (C.y - A.y) + C.x * (A.y - B.y));
+            if (Math.abs(D) < 0.001) return null;
+
+            const Ux = ((A.x*A.x + A.y*A.y) * (B.y - C.y) + (B.x*B.x + B.y*B.y) * (C.y - A.y) + (C.x*C.x + C.y*C.y) * (A.y - B.y)) / D;
+            const Uy = ((A.x*A.x + A.y*A.y) * (C.x - B.x) + (B.x*B.x + B.y*B.y) * (A.x - C.x) + (C.x*C.x + C.y*C.y) * (B.x - A.x)) / D;
+
+            const rPx = dist(A, {x: Ux, y: Uy});
+            return { x: Ux, y: Uy, r: rPx };
+        }
+
+        // --- DRAWING FUNCTIONS ---
+        function draw() {
+            const w = canvas.width / (window.devicePixelRatio || 1);
+            const h = canvas.height / (window.devicePixelRatio || 1);
+
+            ctx.clearRect(0, 0, w, h);
+
+            // 1. Draw Grid Background
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            const gridSize = 30;
+            for (let x = 0; x < w; x += gridSize) {
+                ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, h); ctx.stroke();
+            }
+            for (let y = 0; y < h; y += gridSize) {
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+            }
+
+            const [A, B, C] = points;
+
+            // 2. Draw Circumscribed Circle if enabled
+            if (showCircumcircle) {
+                const cc = getCircumcenter();
+                if (cc) {
+                    ctx.beginPath();
+                    ctx.arc(cc.x, cc.y, cc.r, 0, Math.PI * 2);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([6, 6]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+
+                    // Center dot
+                    ctx.beginPath();
+                    ctx.arc(cc.x, cc.y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#38bdf8';
+                    ctx.fill();
+                }
+            }
+
+            // 3. Draw Triangle Body (Filled)
+            ctx.beginPath();
+            ctx.moveTo(A.x, A.y);
+            ctx.lineTo(B.x, B.y);
+            ctx.lineTo(C.x, C.y);
+            ctx.closePath();
+            ctx.fillStyle = 'rgba(14, 165, 233, 0.12)';
+            ctx.fill();
+
+            // 4. Draw Edges with side color coding
+            drawEdge(B, C, '#f43f5e', 'a'); // Side a (opposite A)
+            drawEdge(A, C, '#10b981', 'b'); // Side b (opposite B)
+            drawEdge(A, B, '#6366f1', 'c'); // Side c (opposite C)
+
+            // 5. Draw Angle Arcs
+            drawAngleArc(A, B, C, '#f43f5e', 'α');
+            drawAngleArc(B, C, A, '#10b981', 'β');
+            drawAngleArc(C, A, B, '#6366f1', 'γ');
+
+            // 6. Draw Vertices (Interactive Dots)
+            points.forEach(p => {
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, vertexRadius, 0, Math.PI * 2);
+                ctx.fillStyle = p.color;
+                ctx.shadowColor = p.color;
+                ctx.shadowBlur = 10;
+                ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 2.5;
+                ctx.stroke();
+
+                // Vertex Text
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 14px Inter';
+                ctx.fillText(p.label, p.x - 4, p.y - 18);
+            });
+
+            updateUI();
+        }
+
+        function drawEdge(p1, p2, color, label) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Label at midpoint
+            const midX = (p1.x + p2.x) / 2;
+            const midY = (p1.y + p2.y) / 2;
+            
+            ctx.fillStyle = color;
+            ctx.font = 'bold 13px Fira Code';
+            ctx.fillText(label, midX + 8, midY - 8);
+        }
+
+        function drawAngleArc(pCenter, p1, p2, color, label) {
+            const ang1 = Math.atan2(p1.y - pCenter.y, p1.x - pCenter.x);
+            const ang2 = Math.atan2(p2.y - pCenter.y, p2.x - pCenter.x);
+
+            ctx.beginPath();
+            ctx.arc(pCenter.x, pCenter.y, 28, ang1, ang2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // --- UPDATE UI METRICS & THEOREMS ---
+        function updateUI() {
+            const data = getTriangleData();
+
+            // Format numbers helper
+            const f = num => num.toFixed(1);
+
+            // Metrics Display
+            document.getElementById('angleA').innerText = `${f(data.degA)}°`;
+            document.getElementById('angleB').innerText = `${f(data.degB)}°`;
+            document.getElementById('angleC').innerText = `${f(data.degC)}°`;
+
+            document.getElementById('sideA').innerText = `${f(data.a)} см`;
+            document.getElementById('sideB').innerText = `${f(data.b)} см`;
+            document.getElementById('sideC').innerText = `${f(data.c)} см`;
+
+            document.getElementById('valP').innerText = `${f(data.perimeter)} см`;
+            document.getElementById('valS').innerText = `${f(data.area)} см²`;
+            document.getElementById('valR').innerText = `${f(data.R)} см`;
+
+            // Theorem 1: Angle Sum
+            document.getElementById('sumCalcText').innerText = `${f(data.degA)}° + ${f(data.degB)}° + ${f(data.degC)}° =`;
+
+            // Theorem 2: Triangle Inequality
+            const ineq1 = (data.a + data.b > data.c);
+            const ineq2 = (data.a + data.c > data.b);
+            const ineq3 = (data.b + data.c > data.a);
+
+            document.getElementById('inequalityList').innerHTML = `
+                <div class="flex justify-between items-center p-1.5 rounded bg-white border border-slate-100">
+                    <span>a + b > c  (${f(data.a)} + ${f(data.b)} = ${f(data.a + data.b)} > ${f(data.c)})</span>
+                    <span class="${ineq1 ? 'text-emerald-600' : 'text-rose-600'} font-bold">${ineq1 ? 'Орындалады ✓' : 'Қате ✗'}</span>
+                </div>
+                <div class="flex justify-between items-center p-1.5 rounded bg-white border border-slate-100">
+                    <span>a + c > b  (${f(data.a)} + ${f(data.c)} = ${f(data.a + data.c)} > ${f(data.b)})</span>
+                    <span class="${ineq2 ? 'text-emerald-600' : 'text-rose-600'} font-bold">${ineq2 ? 'Орындалады ✓' : 'Қате ✗'}</span>
+                </div>
+                <div class="flex justify-between items-center p-1.5 rounded bg-white border border-slate-100">
+                    <span>b + c > a  (${f(data.b)} + ${f(data.c)} = ${f(data.b + data.c)} > ${f(data.a)})</span>
+                    <span class="${ineq3 ? 'text-emerald-600' : 'text-rose-600'} font-bold">${ineq3 ? 'Орындалады ✓' : 'Қате ✗'}</span>
+                </div>
+            `;
+
+            // Theorem 3: Opposite side/angle relation
+            const sortedSides = [
+                { name: 'a (BC)', val: data.a, angle: '∠A', deg: data.degA },
+                { name: 'b (AC)', val: data.b, angle: '∠B', deg: data.degB },
+                { name: 'c (AB)', val: data.c, angle: '∠C', deg: data.degC }
+            ].sort((x, y) => y.val - x.val);
+
+            document.getElementById('sideAngleMatch').innerHTML = `
+                <div class="flex items-center gap-2 text-slate-800">
+                    <span class="font-bold text-sky-700">Ең үлкен қабырға:</span> 
+                    <span class="font-mono bg-sky-50 px-1.5 py-0.5 rounded border">${sortedSides[0].name} = ${f(sortedSides[0].val)} см</span>
+                    <span>→ Қарсы бұрыш:</span> 
+                    <span class="font-mono font-bold text-rose-600">${sortedSides[0].angle} (${f(sortedSides[0].deg)}°)</span>
+                </div>
+                <div class="flex items-center gap-2 text-slate-800 pt-1 border-t border-slate-100">
+                    <span class="font-bold text-slate-600">Ең кіші қабырға:</span> 
+                    <span class="font-mono bg-slate-100 px-1.5 py-0.5 rounded border">${sortedSides[2].name} = ${f(sortedSides[2].val)} см</span>
+                    <span>→ Қарсы бұрыш:</span> 
+                    <span class="font-mono font-bold text-indigo-600">${sortedSides[2].angle} (${f(sortedSides[2].deg)}°)</span>
+                </div>
+            `;
+
+            // Theorem 4: Law of Sines values
+            const ratioA = data.a / Math.sin(data.radA);
+            const ratioB = data.b / Math.sin(data.radB);
+            const ratioC = data.c / Math.sin(data.radC);
+
+            document.getElementById('sinesValDisplay').innerHTML = `
+                <div class="bg-white p-2 rounded border border-slate-200">
+                    <span class="text-slate-500 block text-[10px]">a / sin A</span>
+                    <span class="font-bold text-rose-600">${f(ratioA)}</span>
+                </div>
+                <div class="bg-white p-2 rounded border border-slate-200">
+                    <span class="text-slate-500 block text-[10px]">b / sin B</span>
+                    <span class="font-bold text-emerald-600">${f(ratioB)}</span>
+                </div>
+                <div class="bg-white p-2 rounded border border-slate-200">
+                    <span class="text-slate-500 block text-[10px]">c / sin C</span>
+                    <span class="font-bold text-indigo-600">${f(ratioC)}</span>
+                </div>
+            `;
+
+            // Theorem 5: Law of Cosines check
+            const cosCheckA = Math.sqrt(data.b*data.b + data.c*data.c - 2*data.b*data.c*Math.cos(data.radA));
+            document.getElementById('cosinesValDisplay').innerHTML = `
+                <div class="flex justify-between">
+                    <span>Теория бойынша a:</span>
+                    <span class="font-bold">${f(data.a)} см</span>
+                </div>
+                <div class="flex justify-between text-indigo-700">
+                    <span>√(b² + c² - 2bc·cos A):</span>
+                    <span class="font-bold">${f(cosCheckA)} см</span>
+                </div>
+            `;
+        }
+
+        // --- INTERACTION HANDLERS ---
+        function getCanvasMousePos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function handlePointerDown(e) {
+            const pos = getCanvasMousePos(e);
+            points.forEach(p => {
+                if (dist(pos, p) < vertexRadius + 8) {
+                    activePoint = p;
+                }
+            });
+        }
+
+        function handlePointerMove(e) {
+            if (!activePoint) return;
+            const pos = getCanvasMousePos(e);
+            
+            // Padding boundary check
+            const pad = 20;
+            const maxW = canvas.width / (window.devicePixelRatio || 1);
+            const maxH = canvas.height / (window.devicePixelRatio || 1);
+
+            activePoint.x = Math.max(pad, Math.min(maxW - pad, pos.x));
+            activePoint.y = Math.max(pad, Math.min(maxH - pad, pos.y));
+
+            draw();
+        }
+
+        function handlePointerUp() {
+            activePoint = null;
+        }
+
+        canvas.addEventListener('mousedown', handlePointerDown);
+        canvas.addEventListener('mousemove', handlePointerMove);
+        window.addEventListener('mouseup', handlePointerUp);
+
+        canvas.addEventListener('touchstart', handlePointerDown, {passive: true});
+        canvas.addEventListener('touchmove', handlePointerMove, {passive: true});
+        window.addEventListener('touchend', handlePointerUp);
+
+        // Buttons
+        document.getElementById('toggleCircumcircle').addEventListener('click', () => {
+            showCircumcircle = !showCircumcircle;
+            const btn = document.getElementById('toggleCircumcircle');
+            if (showCircumcircle) {
+                btn.classList.add('bg-sky-50', 'border-sky-300', 'text-sky-700');
+            } else {
+                btn.classList.remove('bg-sky-50', 'border-sky-300', 'text-sky-700');
+            }
+            draw();
+        });
+
+        document.getElementById('resetCanvas').addEventListener('click', () => {
+            points = [
+                { x: 120, y: 320, label: 'A', color: '#f43f5e' },
+                { x: 380, y: 100, label: 'B', color: '#10b981' },
+                { x: 420, y: 320, label: 'C', color: '#6366f1' }
+            ];
+            draw();
+        });
+
+        // --- TAB SWITCHING ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+
+            document.getElementById('content-theorems').classList.add('hidden');
+            document.getElementById('content-calculator').classList.add('hidden');
+            document.getElementById('content-quiz').classList.add('hidden');
+
+            document.getElementById(`content-${tabId}`).classList.remove('hidden');
+        }
+
+        // --- 2. CALCULATOR LOGIC ---
+        function updateCalcInputs() {
+            const mode = document.getElementById('calcMode').value;
+            const container = document.getElementById('calcInputs');
+
+            if (mode === 'SSS') {
+                container.innerHTML = `
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600">a қабырғасы</label>
+                        <input id="inA" type="number" value="7" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600">b қабырғасы</label>
+                        <input id="inB" type="number" value="8" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600">c қабырғасы</label>
+                        <input id="inC" type="number" value="9" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+                    </div>
+                `;
+            } else if (mode === 'SAS') {
+                container.innerHTML = `
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600">b қабырғасы</label>
+                        <input id="inB" type="number" value="5" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600">c қабырғасы</label>
+                        <input id="inC" type="number" value="7" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600">∠A бұрышы (°)</label>
+                        <input id="inAngA" type="number" value="60" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+                    </div>
+                `;
+            } else if (mode === 'ASA') {
+                container.innerHTML = `
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600">a қабырғасы</label>
+                        <input id="inA" type="number" value="10" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600">∠B бұрышы (°)</label>
+                        <input id="inAngB" type="number" value="45" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-600">∠C бұрышы (°)</label>
+                        <input id="inAngC" type="number" value="65" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono">
+                    </div>
+                `;
+            }
+        }
+
+        function calculateTriangle() {
+            const mode = document.getElementById('calcMode').value;
+            const resultBox = document.getElementById('calcResult');
+            const resultList = document.getElementById('calcResultList');
+
+            const toRad = deg => deg * (Math.PI / 180);
+            const toDeg = rad => rad * (180 / Math.PI);
+
+            let a, b, c, degA, degB, degC;
+
+            try {
+                if (mode === 'SSS') {
+                    a = parseFloat(document.getElementById('inA').value);
+                    b = parseFloat(document.getElementById('inB').value);
+                    c = parseFloat(document.getElementById('inC').value);
+
+                    if (a + b <= c || a + c <= b || b + c <= a) {
+                        alert("Ескерту: Мұндай қабырғалары бар үшбұрыш болмайды (Үшбұрыш теңсіздігі орындалмайды)!");
+                        return;
+                    }
+
+                    degA = toDeg(Math.acos((b*b + c*c - a*a) / (2*b*c)));
+                    degB = toDeg(Math.acos((a*a + c*c - b*b) / (2*a*c)));
+                    degC = 180 - degA - degB;
+
+                } else if (mode === 'SAS') {
+                    b = parseFloat(document.getElementById('inB').value);
+                    c = parseFloat(document.getElementById('inC').value);
+                    degA = parseFloat(document.getElementById('inAngA').value);
+
+                    if (degA >= 180) { alert("Бұрыш 180°-тан кіші болуы тиіс!"); return; }
+
+                    const radA = toRad(degA);
+                    a = Math.sqrt(b*b + c*c - 2*b*c*Math.cos(radA));
+
+                    degB = toDeg(Math.acos((a*a + c*c - b*b) / (2*a*c)));
+                    degC = 180 - degA - degB;
+
+                } else if (mode === 'ASA') {
+                    a = parseFloat(document.getElementById('inA').value);
+                    degB = parseFloat(document.getElementById('inAngB').value);
+                    degC = parseFloat(document.getElementById('inAngC').value);
+
+                    if (degB + degC >= 180) { alert("Бұрыштардың қосындысы 180°-тан кіші болуы тиіс!"); return; }
+
+                    degA = 180 - degB - degC;
+                    const radA = toRad(degA);
+                    const radB = toRad(degB);
+                    const radC = toRad(degC);
+
+                    b = (a * Math.sin(radB)) / Math.sin(radA);
+                    c = (a * Math.sin(radC)) / Math.sin(radA);
+                }
+
+                resultList.innerHTML = `
+                    <div><strong>Қабырғалар:</strong> a = ${a.toFixed(2)}, b = ${b.toFixed(2)}, c = ${c.toFixed(2)}</div>
+                    <div><strong>Бұрыштар:</strong> ∠A = ${degA.toFixed(1)}°, ∠B = ${degB.toFixed(1)}°, ∠C = ${degC.toFixed(1)}°</div>
+                `;
+                resultBox.classList.remove('hidden');
+            } catch(e) {
+                alert("Деректерді енгізуде қателік бар!");
+            }
+        }
+
+        // --- 3. QUIZ SYSTEM ---
+        const quizQuestions = [
+            {
+                q: "Үшбұрыштың ішкі бұрыштарының қосындысы неше градусқа тең?",
+                options: ["90°", "180°", "360°", "270°"],
+                correct: 1,
+                explanation: "Кез келген үшбұрыштың ішкі бұрыштарының қосындысы әрдайым 180°-қа тең болады."
+            },
+            {
+                q: "Үшбұрыштың екі қабырғасы 5 см және 9 см. Үшінші қабырғасы қандай болуы МҮМКІН ЕМЕС?",
+                options: ["6 см", "10 см", "13 см", "15 см"],
+                correct: 3,
+                explanation: "Үшбұрыш теңсіздігі бойынша c < a + b, яғни c < 5 + 9 = 14 см. Сондықтан қабырға 15 см бола алмайды."
+            },
+            {
+                q: "Синустар теоремасының дұрыс формуласын көрсетіңіз:",
+                options: [
+                    "a² = b² + c² - 2bc cos A",
+                    "a / sin A = b / sin B = c / sin C = 2R",
+                    "a + b + c = 180",
+                    "S = 1/2 · a · h"
+                ],
+                correct: 1,
+                explanation: "Синустар теоремасы: үшбұрыштың қабырғалары қарсы жатқан бұрыштардың синустарына пропорционал және сырттай сызылған шеңбердің диаметріне (2R) тең."
+            },
+            {
+                q: "Егер үшбұрышта a = 3, b = 4, ∠C = 90° болса, c қабырғасы нешеге тең? (Косинустар теоремасы немесе Пифагор теоремасы)",
+                options: ["5", "6", "7", "25"],
+                correct: 0,
+                explanation: "c² = 3² + 4² - 2(3)(4)cos(90°) = 9 + 16 - 0 = 25 ⇒ c = 5."
+            },
+            {
+                q: "Үшбұрыштың ең үлкен бұрышына қандай қабырға қарсы жатады?",
+                options: ["Ең кіші қабырға", "Орташа қабырға", "Ең үлкен қабырға", "Кез келген қабырға"],
+                correct: 2,
+                explanation: "Үшбұрышта үлкен бұрышқа қарсы әрдайым үлкен қабырға жатады."
+            }
+        ];
+
+        let currentQIndex = 0;
+        let score = 0;
+        let answered = false;
+
+        function loadQuestion() {
+            answered = false;
+            const q = quizQuestions[currentQIndex];
+
+            document.getElementById('qNum').innerText = `Сұрақ ${currentQIndex + 1} / ${quizQuestions.length}`;
+            document.getElementById('qText').innerText = q.q;
+
+            const optionsContainer = document.getElementById('qOptions');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full text-left p-3 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs sm:text-sm font-medium transition flex items-center justify-between";
+                btn.innerHTML = `<span>${opt}</span> <i class="fa-regular fa-circle text-slate-300"></i>`;
+                btn.onclick = () => selectAnswer(idx, btn);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quizFeedback').classList.add('hidden');
+            document.getElementById('nextBtn').classList.add('hidden');
+        }
+
+        function selectAnswer(selectedIdx, btnElement) {
+            if (answered) return;
+            answered = true;
+
+            const q = quizQuestions[currentQIndex];
+            const feedback = document.getElementById('quizFeedback');
+            const options = document.getElementById('qOptions').children;
+
+            if (selectedIdx === q.correct) {
+                score++;
+                btnElement.classList.remove('bg-white', 'hover:bg-slate-50');
+                btnElement.classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
+                btnElement.querySelector('i').className = "fa-solid fa-circle-check text-emerald-600";
+
+                feedback.className = "p-3.5 rounded-xl text-xs font-medium bg-emerald-50 text-emerald-800 border border-emerald-200";
+                feedback.innerHTML = `<strong>Дұрыс! ✓</strong> ${q.explanation}`;
+            } else {
+                btnElement.classList.remove('bg-white', 'hover:bg-slate-50');
+                btnElement.classList.add('bg-rose-50', 'border-rose-500', 'text-rose-900');
+                btnElement.querySelector('i').className = "fa-solid fa-circle-xmark text-rose-600";
+
+                // Highlight correct one
+                options[q.correct].classList.add('bg-emerald-50', 'border-emerald-500', 'text-emerald-900');
+
+                feedback.className = "p-3.5 rounded-xl text-xs font-medium bg-rose-50 text-rose-800 border border-rose-200";
+                feedback.innerHTML = `<strong>Қате ✗</strong> ${q.explanation}`;
+            }
+
+            feedback.classList.remove('hidden');
+            document.getElementById('quizScore').innerText = `${score} / ${quizQuestions.length}`;
+            
+            if (currentQIndex < quizQuestions.length - 1) {
+                document.getElementById('nextBtn').classList.remove('hidden');
+            } else {
+                document.getElementById('nextBtn').innerText = "Қайта бастау";
+                document.getElementById('nextBtn').onclick = resetQuiz;
+                document.getElementById('nextBtn').classList.remove('hidden');
+            }
+        }
+
+        function nextQuestion() {
+            currentQIndex++;
+            loadQuestion();
+        }
+
+        function resetQuiz() {
+            currentQIndex = 0;
+            score = 0;
+            document.getElementById('quizScore').innerText = `0 / ${quizQuestions.length}`;
+            document.getElementById('nextBtn').innerText = "Келесі сұрақ";
+            document.getElementById('nextBtn').onclick = nextQuestion;
+            loadQuestion();
+        }
+
+        // --- INIT ---
+        window.onload = function() {
+            resizeCanvas();
+            updateCalcInputs();
+            loadQuestion();
+        };
+    </script>
+</body>
+</html>
